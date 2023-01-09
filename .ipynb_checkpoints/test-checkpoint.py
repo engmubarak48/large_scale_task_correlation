@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from utils import scores, checkpoint, 
 
-def test(net, criterion, testloader, epoch, np_classes, outModelName):
+def test(net, criterion, testloader, epoch, outModelName):
     global best_acc
     net.eval()
     test_loss = 0
@@ -29,7 +29,7 @@ def test(net, criterion, testloader, epoch, np_classes, outModelName):
 
             if batch_idx % 100 == 0:
                 print(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                    % (test_loss/(batch_idx+1), 100.*correct/(total * np_classes), correct, (total * np_classes)))
+                    % (test_loss/(batch_idx+1), 100.*correct/(total * 40), correct, (total * 40)))
 
     # Save checkpoint.
     all_targets = np.concatenate(all_targets)
