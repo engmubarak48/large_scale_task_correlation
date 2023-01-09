@@ -67,8 +67,8 @@ def parse_arguments(parser: argparse.ArgumentParser, default_args: argparse.Name
             default=1, help="seed"
     )
     parser.add_argument(
-        "--max_epochs",
-        default=default_args.max_epochs,
+        "--epochs",
+        default=default_args.epochs,
         type=int,
         help="no. of epochs for training",
     )

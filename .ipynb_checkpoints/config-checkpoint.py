@@ -26,14 +26,13 @@ args = Namespace(
     num_classes = 40,
     best_acc = 0, 
     start_epoch = 0, 
-    batch_size = 32, 
-    max_epochs = 10, 
+    batch_size = 512, 
+    epochs = 2, 
     lr = 0.001,
     momentum = 0.9,
     weight_decay = 1e-4,
     outModelName = 'randomModel',
     resume = False,
-    max_epochs_target = 10, 
     base_learning_rate = 0.1, 
     )
 

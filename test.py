@@ -1,10 +1,11 @@
 
 import torch
 import numpy as np
-from utils import scores, checkpoint, 
+from utils import scores, checkpoint
+best_f1 = 0
 
-def test(net, criterion, testloader, epoch, np_classes, outModelName):
-    global best_acc
+def test_epoch(net, criterion, testloader, epoch, np_classes, outModelName):
+    global best_f1
     net.eval()
     test_loss = 0
     correct = 0
@@ -14,8 +15,7 @@ def test(net, criterion, testloader, epoch, np_classes, outModelName):
     
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
-            if use_cuda:
-                inputs, targets = inputs.cuda(), targets.squeeze().cuda()
+            inputs, targets = inputs.cuda(), targets.squeeze().cuda()
 
             outputs = net(inputs)
             loss = criterion(outputs.squeeze(), targets.float())
@@ -35,9 +35,10 @@ def test(net, criterion, testloader, epoch, np_classes, outModelName):
     all_targets = np.concatenate(all_targets)
     predicted_labels = np.concatenate(predicted_labels)
     AP, f1 = scores(all_targets, predicted_labels)
-
-    acc = 100.*correct/(total * 40)
-    if acc > best_acc:
-        best_acc = acc
+    AP, f1 = 100.*AP, 100.*f1
+    acc = 100.*correct/(total * np_classes)
+    
+    if f1 > best_f1:
+        best_f1 = f1
         checkpoint(net, acc, epoch, outModelName)
-    return (test_loss/batch_idx, 100.*correct/(total * 40), 100.*AP, 100.*f1)
+    return (test_loss/batch_idx, acc, AP, f1)

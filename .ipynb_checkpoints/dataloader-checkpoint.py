@@ -52,8 +52,8 @@ class CocoClassDatasetRandom:
         image_path = f'{self.images_path}/{image_name}'
         labels = torch.tensor([1 if len(self.coco.getAnnIds(imgIds=index, catIds=[catId])) > 0 else 0 for catId in cat_ids]).unsqueeze(0)
 
-        image = Image.open(image_path).resize((224,224))
-
+        image = Image.open(image_path)
+        
         if self.transform:
             image = self.transform(image)
 

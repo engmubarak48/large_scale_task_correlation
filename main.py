@@ -10,6 +10,8 @@ import torch.nn as nn
 import multiprocessing
 from model import ResNet18
 import torch.optim as optim
+from test import test_epoch
+from train import train_epoch
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from torchvision import datasets
@@ -17,10 +19,9 @@ import torchvision.models as models
 from torch.autograd import Variable
 import torch.backends.cudnn as cudnn
 from config import args as default_args
-from utils import DotDict, parse_arguments
 import torchvision.transforms as transforms
 from dataloader import CocoClassDatasetRandom
-
+from utils import DotDict, parse_arguments, adjust_learning_rate
 
 def main(args):
 
@@ -30,7 +31,7 @@ def main(args):
         return x
 
     train_transform = transforms.Compose([
-                                        # transforms.Resize(size=(224,224)),
+                                        transforms.Resize(size=(224,224)),
                                         # transforms.RandomCrop(224, padding=4),
                                         # transforms.RandomHorizontalFlip(), 
                                         transforms.ToTensor(),
@@ -39,7 +40,7 @@ def main(args):
                                     ])
 
     val_transform = transforms.Compose([
-        # transforms.Resize(size=(224,224)),
+        transforms.Resize(size=(224,224)),
         transforms.ToTensor(),
         change_to_3_channel,
         transforms.Normalize(args.mean, args.std),
@@ -51,9 +52,9 @@ def main(args):
     print(f'----> number of workers: {args.num_workers}')
 
     trainloader = torch.utils.data.DataLoader(
-        train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
+        train_dataset, batch_size=args.batch_size, shuffle=True)#, num_workers=args.num_workers)
     testloader = torch.utils.data.DataLoader(
-        val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
+        val_dataset, batch_size=args.batch_size, shuffle=False)#, num_workers=args.num_workers)
     
     net = ResNet18() 
     inp_features = net.linear.in_features
@@ -89,14 +90,25 @@ def main(args):
     random_acc = predicted.eq(batch_y.squeeze().float()).cpu().sum()/(args.batch_size * args.num_classes) * 100
     print(f'Initial random acc: {random_acc} %')
     
-    for epoch in range(args.num_epochs):
-        print('---- starting epoch: {epoch} -----')
-        
-        train_loss, train_acc, train_AP, train_f1 = train(net, criterion, optimizer, trainloader, epoch, use_cuda)
-        test_loss, test_acc, test_AP, test_f1 = test(net, criterion, testloader, epoch, args.outModelName)
-        
-    
 
+    if not os.path.exists(logname):
+        with open(logname, 'w') as logfile:
+            logwriter = csv.writer(logfile, delimiter=',')
+            logwriter.writerow(['epoch', 'train loss', 'train acc', 'test loss', 'test acc'])
+
+    for epoch in range(args.epochs):
+        adjust_learning_rate(optimizer, args.base_learning_rate, epoch)
+        train_loss, train_acc, train_AP, train_f1 = train_epoch(net, criterion, optimizer, trainloader, args.num_classes, epoch)
+        test_loss, test_acc, test_AP, test_f1 = test_epoch(net, criterion, testloader, epoch, args.num_classes, args.outModelName)
+        
+        with open(logname, 'a') as logfile:
+            logwriter = csv.writer(logfile, delimiter=',')
+            logwriter.writerow([epoch, train_loss, train_acc.item(), test_loss, test_acc.item()])
+
+        print(f'Epoch: {epoch} | train acc: {np.round(train_acc.item(), 3)} | test acc: {np.round(test_acc.item(), 3)}')
+        print(f'Epoch: {epoch} | train loss: {np.round(train_loss, 3)} | test loss: {np.round(test_loss, 3)}')
+        print(f'Epoch: {epoch} | train AP: {np.round(train_AP.item(), 3)} | test AP: {np.round(test_AP.item(), 3)}')
+        print(f'Epoch: {epoch} | train F1: {np.round(train_f1.item(), 3)} | test F1: {np.round(test_f1.item(), 3)}')
     
 
 if __name__ == "__main__":

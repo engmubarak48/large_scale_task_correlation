@@ -41,7 +41,7 @@ def checkpoint(model, acc, epoch, outModelName):
         os.mkdir('checkpointPretrain')
     torch.save(state, f'./checkpointPretrain/{outModelName}.t7')
 
-def adjust_learning_rate(optimizer, epoch):
+def adjust_learning_rate(optimizer, base_learning_rate, epoch):
     """decrease the learning rate at 100 and 150 epoch"""
     lr = base_learning_rate
     if epoch <= 9 and lr > 0.1:
@@ -67,8 +67,8 @@ def parse_arguments(parser: argparse.ArgumentParser, default_args: argparse.Name
             default=1, help="seed"
     )
     parser.add_argument(
-        "--max_epochs",
-        default=default_args.max_epochs,
+        "--epochs",
+        default=default_args.epochs,
         type=int,
         help="no. of epochs for training",
     )
