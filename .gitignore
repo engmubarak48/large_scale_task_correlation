@@ -1,5 +1,5 @@
 coco
-coco_dataset
 checkpoint
 .ipynb_checkpoints
 __pycache__
+data
