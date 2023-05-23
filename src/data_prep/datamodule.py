@@ -108,30 +108,13 @@ class iterable_random_celebA_split(torch.utils.data.IterableDataset):
         assert len(self.celebData.attr_names) == 40, "There are more than 40 classes"
         self.mode = mode
         self.batch_size = batch_size
-        self._generator = self._make_generator()
         self.used_idxs = set()
         if self.mode == "pretrain":
             self.labels = np.load(file=f"{data_path}/pretrain_labels.npy").tolist()
         else:
             self.labels = np.load(file=f"{data_path}/finetune_labels.npy").tolist()
 
-    def __next__(self):
-        batch_images = []
-        batch_labels = []
-        for _ in range(self.batch_size):
-            image, image_label = next(self._generator)
-            batch_images.append(image)
-            batch_labels.append(image_label)
-        return torch.stack(batch_images), torch.stack(batch_labels)
-
     def __iter__(self):
-        return self
-
-    @property
-    def nb_batches(self):
-        return len(self.celebData) // self.batch_size
-
-    def _make_generator(self):
         """Makes a single example generator of the loaded data."""
         idx = 0
         while True:
@@ -157,6 +140,10 @@ class iterable_random_celebA_split(torch.utils.data.IterableDataset):
                 ]
             )
             yield image, image_labels
+
+    @property
+    def nb_batches(self):
+        return len(self.celebData) // self.batch_size
 
     def get_image_by_index(self, idx):
         image, image_labels = self.celebData[idx]
@@ -209,15 +196,15 @@ class dataloading:
                 data_path=args_data.train_images_path,
                 split="train",
                 mode=args_train_test.mode,
-                batch_size=args_train_test.batch_size_training,
-                transforms=train_transform,
+                batch_size=args_train_test.batch_size,
+                transform=train_transform,
             )
             self.celeb_val_data = iterable_random_celebA_split(
                 data_path=args_data.val_images_path,
                 split="valid",
                 mode=args_train_test.mode,
-                batch_size=args_train_test.batch_size_inference,
-                transforms=val_transform,
+                batch_size=args_train_test.batch_size,
+                transform=val_transform,
             )
         if dataset_name == "coco":
             train_transform = transforms.Compose(
@@ -266,18 +253,18 @@ class dataloading:
 
     def get_dataloaders(self):
         if self.dataset_name == "celebA":
-            trainloader = torch.utils.data.DataLoader(
-                self.celeb_train_data, batch_size=None
-            )
-            valloader = torch.utils.data.DataLoader(
-                self.celeb_val_data, batch_size=None
-            )
+            trainloader = self.celeb_train_data
+            valloader = self.celeb_val_data
         elif self.dataset_name == "coco":
             trainloader = torch.utils.data.DataLoader(
-                self.coco_train_dataset, batch_size=self.args_train_test.batch_size_training, shuffle=True
+                self.coco_train_dataset,
+                batch_size=self.args_train_test.batch_size,
+                shuffle=True,
             )  # , num_workers=args.num_workers)
             valloader = torch.utils.data.DataLoader(
-                self.coco_val_dataset, batch_size=self.args_train_test.batch_size_inference, shuffle=False
+                self.coco_val_dataset,
+                batch_size=self.args_train_test.batch_size,
+                shuffle=False,
             )  # , num_workers=args.num_workers)
         else:
             raise ValueError(f"Unknown Dataset: {self.dataset_name}")

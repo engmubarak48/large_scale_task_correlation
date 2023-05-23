@@ -133,7 +133,7 @@ def ResNet50():
 
 
 def model_net(num_classes):
-    net = ResNet18()
-    inp_features = net.linear.in_features
-    net.linear = torch.nn.Linear(in_features=inp_features, out_features=num_classes)
-    return net
+    model = ResNet18()
+    inp_features = model.linear.in_features
+    model.linear = torch.nn.Linear(in_features=inp_features, out_features=num_classes)
+    return model

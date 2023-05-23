@@ -1,7 +1,8 @@
-
 import csv
 import wandb
+from loguru import logger
 import torch
+import pdb
 import numpy as np
 from models.model_utils import Utils
 from torch.autograd import Variable
@@ -24,21 +25,23 @@ class train_evaluate:
         self.criterion = self.model_utils.get_criterion()
 
     def _repeat(self, dataset):
-        if self.args_data.dataset_name == "celebA":
-            loader = torch.utils.data.DataLoader(dataset, batch_size=None)
+        if self.args_train_test.dataset_name == "celebA":
+            logger.info("repeating the dataset")
+            loader = torch.utils.data.DataLoader(
+                dataset, batch_size=self.args_train_test.batch_size
+            )
         else:
             loader = dataset
         return loader
 
     def train(self, model, trainset, epoch, criterion, optimizer):
-        print("\nEpoch: %d" % epoch)
+        logger.info("\nEpoch: %d" % epoch)
         model.train()
         train_loss = 0
         correct = 0
         total = 0
         predicted_labels = []
         all_targets = []
-
         trainloader = self._repeat(trainset)
         for batch_idx, (inputs, targets) in enumerate(trainloader):
             inputs, targets = inputs.to(self.device), targets.to(self.device)
@@ -56,7 +59,6 @@ class train_evaluate:
             predicted_labels.append(predicted.detach().cpu())
             total += targets.size(0)
             correct += predicted.eq(targets.data).cpu().sum()
-
             if batch_idx % self.args_train_test.train_batch_jump == 0:
                 print(
                     batch_idx,
@@ -66,9 +68,9 @@ class train_evaluate:
                     "Loss: %.3f | Acc: %.3f%% (%d/%d)"
                     % (
                         train_loss / (batch_idx + 1),
-                        100.0 * correct / (total * self.args_data.num_classes // 2),
+                        100.0 * correct / (total * self.args_data.num_classes),
                         correct,
-                        (total * self.args_data.num_classes // 2),
+                        (total * self.args_data.num_classes),
                     ),
                 )
 
@@ -77,7 +79,7 @@ class train_evaluate:
         AP, f1 = self.model_utils.scores(all_targets, predicted_labels)
         return (
             train_loss / batch_idx,
-            100.0 * correct / (total * self.args_data.num_classes // 2),
+            100.0 * correct / (total * self.args_data.num_classes),
             100.0 * AP,
             100.0 * f1,
         )
@@ -114,9 +116,9 @@ class train_evaluate:
                         "Loss: %.3f | Acc: %.3f%% (%d/%d)"
                         % (
                             test_loss / (batch_idx + 1),
-                            100.0 * correct / (total * self.args_data.num_classes // 2),
+                            100.0 * correct / (total * self.args_data.num_classes),
                             correct,
-                            (total * self.args_data.num_classes // 2),
+                            (total * self.args_data.num_classes),
                         ),
                     )
 
@@ -127,15 +129,16 @@ class train_evaluate:
 
         if f1 > self.best_f1:
             self.best_f1 = f1
-            self.model_utils.checkpoint(model, f1, epoch)
+            if self.args_result.save_ckpts:
+                self.model_utils.checkpoint(model, f1, epoch)
         return (
             test_loss / batch_idx,
-            100.0 * correct / (total * self.args_data.num_classes // 2),
+            100.0 * correct / (total * self.args_data.num_classes),
             100.0 * AP,
             100.0 * f1,
         )
 
-    def train_eval(self, train_loader, val_loader):
+    def train_eval(self, trainset, validset):
         optimizer = self.optimizer
         criterion = self.criterion
         model = self.model
@@ -143,13 +146,16 @@ class train_evaluate:
             self.model_utils.adjust_learning_rate(optimizer, epoch)
             train_loss, train_acc, train_AP, train_f1 = self.train(
                 model=model,
-                trainset=train_loader,
+                trainset=trainset,
                 epoch=epoch,
                 criterion=criterion,
                 optimizer=optimizer,
             )
             valid_loss, valid_acc, valid_AP, valid_f1 = self.test(
-                model=model, validset=val_loader, criterion=criterion, epoch=epoch,
+                model=model,
+                validset=validset,
+                criterion=criterion,
+                epoch=epoch,
             )
             with open(self.model_utils.logname, "a") as logfile:
                 logwriter = csv.writer(logfile, delimiter=",")
@@ -167,16 +173,16 @@ class train_evaluate:
                     ]
                 )
 
-            print(
+            logger.info(
                 f"Epoch: {epoch} | train acc: {np.round(train_acc.item(), 3)} | test acc: {np.round(valid_acc.item(), 3)}"
             )
-            print(
+            logger.info(
                 f"Epoch: {epoch} | train loss: {np.round(train_loss, 3)} | test loss: {np.round(valid_loss, 3)}"
             )
-            print(
+            logger.info(
                 f"Epoch: {epoch} | train AP: {np.round(train_AP.item(), 3)} | test AP: {np.round(valid_AP.item(), 3)}"
             )
-            print(
+            logger.info(
                 f"Epoch: {epoch} | train F1: {np.round(train_f1.item(), 3)} | test F1: {np.round(valid_f1.item(), 3)}"
             )
 

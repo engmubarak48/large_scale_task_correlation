@@ -12,21 +12,20 @@ datamodule:
         num_classes: 80
         outModelName: "randomModel"
       celebA:
-        val_images_path: "./large_scale_task_correlation/data/celeb_datasets"
-        train_images_path: "./large_scale_task_correlation/data/celeb_datasets"
+        val_images_path: "/Users/jamahusseinmohamud/Desktop/research/DM research/large_scale_correlations/large_scale_task_correlation/data/celeb_datasets"
+        train_images_path: "/Users/jamahusseinmohamud/Desktop/research/DM research/large_scale_correlations/large_scale_task_correlation/data/celeb_datasets"
         # mean and std stats
         stats: {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]}
         resize_size: 64
         ## hyper-parameters
-        num_classes: 40
+        num_classes: 20
         outModelName: "randomModel"
     
   args_train_test:
     dataset_name: "celebA"
     mode: "pretrain"
     # Data handling-related
-    batch_size_training: 128
-    batch_size_inference: 128
+    batch_size: 128
     train_batch_jump: 100
     test_batch_jump: 100
     epochs: 2
@@ -39,5 +38,6 @@ datamodule:
     finetuned_models_path: "./checkpoint" 
     logPath: "./resultPath"
     wandb_log: False
+    save_ckpts: False
 
 architecture:     # The parameters for the architecture
