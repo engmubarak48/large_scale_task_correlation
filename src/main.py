@@ -18,10 +18,14 @@ def main(args):
     loader = dataloading(
         dataset_name=dataset_name, args_data=args_data, args_train_test=args_train_test
     )
-    train_eval = train_evaluate(
-        args_data=args_data, args_train_test=args_train_test, args_result=args_result
-    )
+    num_classes = loader.get_number_classes
     trainloader, validloader = loader.get_dataloaders()
+    train_eval = train_evaluate(
+        args_data=args_data,
+        args_train_test=args_train_test,
+        args_result=args_result,
+        num_classes=num_classes,
+    )
     train_eval.train_eval(trainset=trainloader, validset=validloader)
 
 

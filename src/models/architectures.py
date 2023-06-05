@@ -120,6 +120,30 @@ class ResNet(nn.Module):
         return out
 
 
+class finetuneNetwork:
+    def __init__(self, hparams):
+        self.hparams = hparams
+
+    def finetune_model(self, model, num_classes):
+        for param in model.parameters():
+            param.requires_grad = False
+
+        inp_features = model.module.linear.in_features
+        model.module.linear = torch.nn.Linear(
+            in_features=inp_features, out_features=num_classes
+        )
+        return model
+
+    def get_optimizer(self, model):
+        optimizer = torch.optim.SGD(
+            model.parameters(),
+            lr=self.hparams.lr,
+            momentum=self.hparams.momentum,
+            weight_decay=self.hparams.weight_decay,
+        )
+        return optimizer
+
+
 def ResNet18():
     return ResNet(BasicBlock, [2, 2, 2, 2])
 
