@@ -1,0 +1,43 @@
+datamodule:
+  args_data: 
+      coco:
+        val_images_path: "./coco_dataset/images/val2017"
+        val_annotation_path: "./coco_dataset/annotations/instances_val2017.json"
+        train_images_path: "./coco_dataset/images/train2017"
+        train_annotation_path: "./coco_dataset/annotations/instances_train2017.json"
+        # mean and std stats
+        stats: {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]}
+        resize_size: 256
+        ## hyper-parameters
+        num_classes: 80
+        outModelName: "randomModel"
+      celebA:
+        val_images_path: "/Users/jamahusseinmohamud/Desktop/research/DM research/large_scale_correlations/large_scale_task_correlation/data/celeb_datasets"
+        train_images_path: "/Users/jamahusseinmohamud/Desktop/research/DM research/large_scale_correlations/large_scale_task_correlation/data/celeb_datasets"
+        # mean and std stats
+        stats: {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]}
+        resize_size: 64
+        ## hyper-parameters
+        num_classes: 20
+        outModelName: "randomModel"
+    
+  args_train_test:
+    dataset_name: "celebA"
+    mode: "pretrain"
+    # Data handling-related
+    batch_size: 128
+    train_batch_jump: 100
+    test_batch_jump: 100
+    epochs: 2
+    lr: 0.001
+    momentum: 0.9
+    weight_decay: 0.0004
+    base_learning_rate: 0.1
+  args_result: 
+    pretrained_models_path: "./checkpoint" 
+    finetuned_models_path: "./checkpoint" 
+    logPath: "./resultPath"
+    wandb_log: False
+    save_ckpts: False
+
+architecture:     # The parameters for the architecture

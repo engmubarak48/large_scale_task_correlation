@@ -1,5 +1,10 @@
 coco
-coco_dataset
 checkpoint
+logs
+datasets
+visualizations
 .ipynb_checkpoints
+*.png
 __pycache__
+data
+*.graphml
