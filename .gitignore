@@ -11,4 +11,4 @@ data
 *.pdf
 notebooks
 *.ipynb
-src/cocoapi
+cocoapi
