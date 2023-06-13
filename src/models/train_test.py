@@ -4,6 +4,7 @@ from loguru import logger
 import torch
 from tqdm import tqdm
 import numpy as np
+import multiprocessing
 from models.model_utils import Utils
 from torch.autograd import Variable
 
@@ -51,7 +52,9 @@ class train_evaluate:
         if self.args_train_test.dataset_name == "celebA":
             # logger.info("repeating the dataset")
             loader = torch.utils.data.DataLoader(
-                dataset, batch_size=self.args_train_test.batch_size
+                dataset,
+                batch_size=self.args_train_test.batch_size
+                num_workers= multiprocessing.cpu_count(),
             )
         else:
             loader = dataset

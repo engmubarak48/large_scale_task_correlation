@@ -12,7 +12,7 @@ def main(args):
     args_data = args.datamodule.args_data[dataset_name]
     args_result = args.datamodule.args_result
     if args_result.wandb_log:
-        wandb.init(project=args.project_name, entity="lsc")
+        wandb.init(project=args_result.project_name, entity="jmohamud")
 
     # get dataloader
     loader = dataloading(

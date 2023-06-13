@@ -5,7 +5,7 @@ import torchvision
 from PIL import Image
 from typing import Dict, Any, List
 from loguru import logger
-from cocoapi.PythonAPI.pycocotools.coco import COCO
+# from cocoapi.PythonAPI.pycocotools.coco import COCO
 import torchvision.transforms as transforms
 
 
@@ -98,6 +98,7 @@ class iterable_random_celebA_split(torch.utils.data.IterableDataset):
         transform: callable = transforms.ToTensor(),
     ):
         super(iterable_random_celebA_split).__init__()
+        # print("data path: ", data_path)
         self.celebData = torchvision.datasets.CelebA(
             root=data_path,
             split=split,

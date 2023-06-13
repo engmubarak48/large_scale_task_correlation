@@ -66,21 +66,13 @@ class Utils:
 
     def get_device(self):
         # Check that MPS is available
-        if not torch.backends.mps.is_available():
-            if not torch.backends.mps.is_built():
-                logger.info(
-                    "MPS not available because the current PyTorch install was not "
-                    "built with MPS enabled."
-                )
-            else:
-                logger.info(
-                    "MPS not available because the current MacOS version is not 12.3+ "
-                    "and/or you do not have an MPS-enabled device on this machine."
-                )
+        if torch.backends.mps.is_available():
+            device = "mps"
         elif torch.cuda.is_available():
             device = "cuda"
         else:
-            device = torch.device("mps")
+            device = "cpu"
+
         logger.info(f"Using device: {device}")
         return device
 
