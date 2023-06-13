@@ -8,3 +8,7 @@ visualizations
 __pycache__
 data
 *.graphml
+*.pdf
+notebooks
+*.ipynb
+cocoapi

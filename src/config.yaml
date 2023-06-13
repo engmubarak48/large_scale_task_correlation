@@ -8,36 +8,41 @@ datamodule:
         # mean and std stats
         stats: {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]}
         resize_size: 256
-        ## hyper-parameters
         num_classes: 80
-        outModelName: "randomModel"
+        strategy: "random"
       celebA:
-        val_images_path: "/Users/jamahusseinmohamud/Desktop/research/DM research/large_scale_correlations/large_scale_task_correlation/data/celeb_datasets"
-        train_images_path: "/Users/jamahusseinmohamud/Desktop/research/DM research/large_scale_correlations/large_scale_task_correlation/data/celeb_datasets"
+        val_images_path: "../large_scale_task_correlation/data/celeb_datasets"
+        train_images_path: "../large_scale_task_correlation/data/celeb_datasets"
         # mean and std stats
         stats: {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]}
         resize_size: 64
-        ## hyper-parameters
-        num_classes: 20
-        outModelName: "randomModel"
+        strategy: "random"
+        pretrain_blocks: []
+        finetune_blocks: []
+        json_labels_file: "random_strategy_labels.json"
     
   args_train_test:
     dataset_name: "celebA"
-    mode: "pretrain"
-    # Data handling-related
+    mode: "finetune"
     batch_size: 128
     train_batch_jump: 100
     test_batch_jump: 100
-    epochs: 2
+    epochs: 3
     lr: 0.001
     momentum: 0.9
     weight_decay: 0.0004
-    base_learning_rate: 0.1
+    finetune_params:
+      lr: 0.0001
+      momentum: 0.9
+      weight_decay: 0.0004
   args_result: 
-    pretrained_models_path: "./checkpoint" 
-    finetuned_models_path: "./checkpoint" 
-    logPath: "./resultPath"
+    pretrained_models_path: "../large_scale_task_correlation/src/outputs/checkpoint/pretrain" 
+    finetuned_models_path: "../large_scale_task_correlation/src/outputs/checkpoint/finetune" 
+    logPath: "../large_scale_task_correlation/src/outputs/logs"
+    load_ckpts: "../large_scale_task_correlation/src/outputs/checkpoint/pretrain/pretrain_68.04_2_best.pt"
+    max_files_to_keep: 2
     wandb_log: False
-    save_ckpts: False
+    save_ckpts: True
+
 
 architecture:     # The parameters for the architecture
