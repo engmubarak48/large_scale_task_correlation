@@ -5,6 +5,7 @@ import torchvision
 from PIL import Image
 from typing import Dict, Any, List
 from loguru import logger
+
 # from cocoapi.PythonAPI.pycocotools.coco import COCO
 import torchvision.transforms as transforms
 
@@ -85,6 +86,79 @@ class CocoClassDatasetRandom:
         return image, labels
 
 
+# class iterable_random_celebA_split(torch.utils.data.IterableDataset):
+#     def __init__(
+#         self,
+#         mode: str,
+#         json_labels_file: str,
+#         data_path: str = "datasets/",
+#         split: str = "all",
+#         target_type: str = "attr",
+#         download: bool = True,
+#         batch_size: int = 4,
+#         transform: callable = transforms.ToTensor(),
+#     ):
+#         super(iterable_random_celebA_split).__init__()
+#         # print("data path: ", data_path)
+#         self.celebData = torchvision.datasets.CelebA(
+#             root=data_path,
+#             split=split,
+#             target_type=target_type,
+#             transform=transform,
+#             download=download,
+#         )
+#         # remove empty label from label names.
+#         self.celebData.attr_names.remove("")
+#         assert len(self.celebData.attr_names) == 40, "There are more than 40 classes"
+#         self.mode = mode
+#         self.batch_size = batch_size
+#         self.used_idxs = set()
+#         with open(f"{data_path}/{json_labels_file}", "r") as json_file:
+#             labels = json.load(json_file)
+#         self.labels = labels[mode]
+
+#     def __iter__(self):
+#         """Makes a single example generator of the loaded data."""
+#         idx = 0
+#         while True:
+#             # This will reset the index to 0 if we are at the end of the dataset.
+#             if idx == len(self.celebData):
+#                 idx = idx % len(self.celebData)
+#                 self.used_idxs = set()
+#                 return
+#             image, image_labels, image_label_names = self.get_image_by_index(idx)
+#             if not bool(image_label_names & set(self.labels)):
+#                 idx += 1
+#                 continue
+#             if idx in self.used_idxs:
+#                 raise Exception(
+#                     f"Index: {idx} is already used and len used_idxs: {len(self.used_idxs)} and len celebdata: {len(self.celebData)}"
+#                 )
+#             self.used_idxs.add(idx)
+#             idx += 1
+#             image_labels = torch.tensor(
+#                 [
+#                     1 if self.labels[i] in image_label_names else 0
+#                     for i in range(len(self.labels))
+#                 ]
+#             )
+#             yield image, image_labels
+
+#     @property
+#     def nb_batches(self):
+#         return len(self.celebData) // self.batch_size
+
+#     def get_image_by_index(self, idx):
+#         image, image_labels = self.celebData[idx]
+#         # align image and labels
+#         image_label_names = {
+#             self.celebData.attr_names[i]
+#             for i in range(len(self.celebData.attr_names))
+#             if image_labels[i] == 1
+#         }
+#         return image, image_labels, image_label_names
+
+
 class iterable_random_celebA_split(torch.utils.data.IterableDataset):
     def __init__(
         self,
@@ -96,9 +170,9 @@ class iterable_random_celebA_split(torch.utils.data.IterableDataset):
         download: bool = True,
         batch_size: int = 4,
         transform: callable = transforms.ToTensor(),
+        num_workers: int = 1,
     ):
         super(iterable_random_celebA_split).__init__()
-        # print("data path: ", data_path)
         self.celebData = torchvision.datasets.CelebA(
             root=data_path,
             split=split,
@@ -106,7 +180,6 @@ class iterable_random_celebA_split(torch.utils.data.IterableDataset):
             transform=transform,
             download=download,
         )
-        # remove empty label from label names.
         self.celebData.attr_names.remove("")
         assert len(self.celebData.attr_names) == 40, "There are more than 40 classes"
         self.mode = mode
@@ -115,16 +188,22 @@ class iterable_random_celebA_split(torch.utils.data.IterableDataset):
         with open(f"{data_path}/{json_labels_file}", "r") as json_file:
             labels = json.load(json_file)
         self.labels = labels[mode]
+        self.num_workers = num_workers
+        self.samples_per_worker = len(self.celebData) // num_workers
 
     def __iter__(self):
-        """Makes a single example generator of the loaded data."""
-        idx = 0
-        while True:
-            # This will reset the index to 0 if we are at the end of the dataset.
-            if idx == len(self.celebData):
-                idx = idx % len(self.celebData)
-                self.used_idxs = set()
-                return
+        worker_info = torch.utils.data.get_worker_info()
+        if worker_info is None:  # single-process data loading
+            iter_start = 0
+            iter_end = len(self.celebData)
+        else:  # in a worker process
+            per_worker = self.samples_per_worker
+            worker_id = worker_info.id
+            iter_start = worker_id * per_worker
+            iter_end = min(iter_start + per_worker, len(self.celebData))
+
+        idx = iter_start
+        while idx < iter_end:
             image, image_labels, image_label_names = self.get_image_by_index(idx)
             if not bool(image_label_names & set(self.labels)):
                 idx += 1
@@ -149,7 +228,6 @@ class iterable_random_celebA_split(torch.utils.data.IterableDataset):
 
     def get_image_by_index(self, idx):
         image, image_labels = self.celebData[idx]
-        # align image and labels
         image_label_names = {
             self.celebData.attr_names[i]
             for i in range(len(self.celebData.attr_names))
@@ -288,6 +366,7 @@ class dataloading:
                     split="train",
                     mode=args_train_test.mode,
                     batch_size=args_train_test.batch_size,
+                    num_workers=args_train_test.num_workers,
                     transform=train_transform,
                 )
                 self.celeb_val_data = iterable_random_celebA_split(
@@ -296,6 +375,7 @@ class dataloading:
                     split="valid",
                     mode=args_train_test.mode,
                     batch_size=args_train_test.batch_size,
+                    num_workers=args_train_test.num_workers,
                     transform=val_transform,
                 )
             elif args_data.strategy == "cluster":

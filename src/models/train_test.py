@@ -7,6 +7,10 @@ import numpy as np
 import multiprocessing
 from models.model_utils import Utils
 from torch.autograd import Variable
+import warnings
+from torch.utils.data import DataLoader
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 class train_evaluate:
@@ -51,10 +55,10 @@ class train_evaluate:
     def _repeat(self, dataset):
         if self.args_train_test.dataset_name == "celebA":
             # logger.info("repeating the dataset")
-            loader = torch.utils.data.DataLoader(
+            loader = DataLoader(
                 dataset,
-                batch_size=self.args_train_test.batch_size
-                num_workers= multiprocessing.cpu_count(),
+                batch_size=self.args_train_test.batch_size,
+                num_workers=self.args_train_test.num_workers,
             )
         else:
             loader = dataset
