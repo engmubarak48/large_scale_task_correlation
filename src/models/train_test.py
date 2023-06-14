@@ -19,6 +19,11 @@ class train_evaluate:
         self.args_train_test = args_train_test
         self.args_result = args_result
         self.best_f1 = float("-inf")
+        self.best_val_loss = float("inf")  # initialize to infinity
+        self.patience = (
+            args_train_test.patience
+        )  # number of epochs to wait for improvement before stopping
+        self.epochs_without_improvement = 0
         self.model_utils = Utils(
             args_data=args_data,
             args_train_test=args_train_test,
@@ -249,6 +254,19 @@ class train_evaluate:
                         "learning_rate": learning_rate,
                     }
                 )
+            # assume val_loss is the validation loss for this epoch
+            if valid_loss < self.best_val_loss:
+                self.best_val_loss = valid_loss
+                self.epochs_without_improvement = 0
+            else:
+                self.epochs_without_improvement += 1
+
+            if self.epochs_without_improvement >= self.patience:
+                print(
+                    f"Stopping early due the performance not improving after {self.patience}!"
+                )
+                break
+
             if valid_f1 > self.best_f1:
                 self.best_f1 = valid_f1
                 if self.args_result.save_ckpts:

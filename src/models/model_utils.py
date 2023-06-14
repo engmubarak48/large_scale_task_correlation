@@ -143,3 +143,24 @@ class Utils:
             lr /= 10
         for param_group in optimizer.param_groups:
             param_group["lr"] = lr
+
+    def schedulers(self, scheduler_name, optimizer):
+        scheduler_args = self.args_data[scheduler_name]
+        if scheduler_name == "CosineAnnealingLR":
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer, T_max=scheduler_args.T_max, eta_min=scheduler_args.eta_min
+            )
+        elif scheduler_name == "ExponentialLR":
+            scheduler = torch.optim.lr_scheduler.ExponentialLR(
+                optimizer, gamma=scheduler_args.gamma
+            )
+        elif scheduler_name == "ReduceLROnPlateau":
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer,
+                mode=scheduler_args.mode,
+                factor=scheduler_args.factor,
+                patience=scheduler_args.patience,
+            )
+        else:
+            raise ValueError(f"Unknow scheduler: {scheduler_name}")
+        return scheduler

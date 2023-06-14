@@ -14,6 +14,7 @@ datamodule:
         val_images_path: "../large_scale_task_correlation/data/celeb_datasets"
         train_images_path: "../large_scale_task_correlation/data/celeb_datasets"
         # mean and std stats
+        crop_size: 56
         stats: {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]}
         resize_size: 64
         strategy: "random"
@@ -23,25 +24,38 @@ datamodule:
     
   args_train_test:
     dataset_name: "celebA"
-    mode: "finetune"
-    batch_size: 128
+    mode: "pretrain"
+    scheduler_name: CosineAnnealingLR
+    batch_size: 256
     train_batch_jump: 100
     test_batch_jump: 100
-    epochs: 3
+    epochs: 200
     lr: 0.001
     momentum: 0.9
-    weight_decay: 0.0004
+    weight_decay: 0.0001
+    num_workers: 128
+    patience: 7
     finetune_params:
       lr: 0.0001
       momentum: 0.9
       weight_decay: 0.0004
+    CosineAnnealingLR:
+      T_max: 10
+      eta_min: 0
+    ExponentialLR: 
+      gamma: 0.1
+    ReduceLROnPlateau: 
+      mode: "min"
+      factor: 0.1
+      patience: 10
   args_result: 
+    project_name: "lsc"
     pretrained_models_path: "../large_scale_task_correlation/src/outputs/checkpoint/pretrain" 
     finetuned_models_path: "../large_scale_task_correlation/src/outputs/checkpoint/finetune" 
     logPath: "../large_scale_task_correlation/src/outputs/logs"
-    load_ckpts: "../large_scale_task_correlation/src/outputs/checkpoint/pretrain/pretrain_68.04_2_best.pt"
+    load_ckpts: ""
     max_files_to_keep: 2
-    wandb_log: False
+    wandb_log: True
     save_ckpts: True
 
 

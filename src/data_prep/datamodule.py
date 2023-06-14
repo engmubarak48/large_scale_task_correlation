@@ -339,14 +339,31 @@ class dataloading:
                     transforms.Resize(
                         size=(args_data.resize_size, args_data.resize_size)
                     ),
-                    # transforms.RandomCrop(resize_size, padding=4),
-                    # transforms.RandomHorizontalFlip(),
+                    transforms.RandomHorizontalFlip(),
+                    transforms.RandomCrop(
+                        size=(args_data.crop_size, args_data.crop_size), padding=4
+                    ),
+                    transforms.RandomRotation(15),
                     transforms.ToTensor(),
                     transforms.Normalize(
                         args_data.stats["mean"], args_data.stats["std"]
                     ),
                 ]
             )
+
+            # train_transform = transforms.Compose(
+            #     [
+            #         transforms.Resize(
+            #             size=(args_data.resize_size, args_data.resize_size)
+            #         ),
+            #         # transforms.RandomCrop(resize_size, padding=4),
+            #         # transforms.RandomHorizontalFlip(),
+            #         transforms.ToTensor(),
+            #         transforms.Normalize(
+            #             args_data.stats["mean"], args_data.stats["std"]
+            #         ),
+            #     ]
+            # )
 
             val_transform = transforms.Compose(
                 [
